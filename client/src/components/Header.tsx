@@ -1,4 +1,4 @@
-import logoUrl from '@assets/generated_images/Zayu_Go_sports_logo_7a7a6d97.png';
+import logoUrl from '@assets/Zayu Go logo_1759003276594.jpg';
 
 interface HeaderProps {
   onProfileClick?: () => void;
