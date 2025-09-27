@@ -1,0 +1,157 @@
+Implementar la pantalla "Iniciar Navegación" en tu app de Replit. La app se conectará de forma segura a tu API de ServiceNow, obtendrá las opciones de ruta y las mostrará en tarjetas interactivas y visualmente atractivas, listas para que el usuario elija una.
+Paso 1: Seguridad PRIMERO - Configura tus Replit Secrets (2 minutos)
+No saltes este paso. Proteger tus credenciales es crucial.
+En tu proyecto de Replit, haz clic en el icono del candado 🔒 en la barra de herramientas de la izquierda ("Secrets").
+Crea las siguientes 3 "secrets":
+Key: SN_INSTANCE_URL
+Value: soc-aug-6718-0008.lab-service-now.com
+Key: SN_USER
+Value: admin
+Key: SN_PASSWORD
+Value: 4PkQYsQ5YNqf
+Paso 2: El Código - Reemplaza src/App.jsx
+Este es el núcleo de tu aplicación. El siguiente código está diseñado para:
+Conectarse de forma segura usando tus Secrets.
+Manejar estados de Carga, Error y Éxito.
+Mostrar los datos de tu tabla en un formato de "Tarjetas de Ruta" intuitivo y visual.
+Acción: Ve a tu archivo src/App.jsx, borra todo el contenido y pégalo completo.
+code
+Jsx
+// src/App.jsx
+
+import { useState, useEffect } from 'react';
+import logo from './assets/logo.png';
+
+// --- El Corazón de la Aplicación ---
+function App() {
+  const [routes, setRoutes] = useState([]);      // Guardará las rutas desde ServiceNow
+  const [loading, setLoading] = useState(true);  // Para mostrar "Cargando..."
+  const [error, setError] = useState(null);      // Para mostrar errores de conexión
+
+  // Este 'hook' se ejecuta una vez para llamar a la API cuando la app carga
+  useEffect(() => {
+    async function fetchNavigationRoutes() {
+      try {
+        // Leemos las variables seguras desde Replit Secrets
+        const instanceURL = import.meta.env.VITE_SN_INSTANCE_URL;
+        const user = import.meta.env.VITE_SN_USER;
+        const password = import.meta.env.VITE_SN_PASSWORD;
+        
+        // Construimos la URL final de tu API Table
+        const endpoint = `https://${instanceURL}/api/now/table/x_snc_zayugo_4000x_data?sysparm_limit=10`;
+
+        // La llamada 'fetch' a la API con las credenciales correctas
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Basic ' + btoa(`${user}:${password}`),
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error de red: ${response.status} - ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setRoutes(data.result || []); // Guardamos las rutas en nuestro estado
+        
+      } catch (err) {
+        console.error("Error al conectar con ServiceNow:", err);
+        setError(err.message); // Si hay un error, lo guardamos para mostrarlo
+      } finally {
+        setLoading(false); // Al final, dejamos de mostrar el mensaje de "Cargando..."
+      }
+    }
+
+    fetchNavigationRoutes();
+  }, []);
+
+  // --- Lógica para decidir qué mostrar en pantalla ---
+  const renderContent = () => {
+    if (loading) {
+      return <p className="text-center text-gray-500 mt-16 animate-pulse">Calculando rutas desde ServiceNow...</p>;
+    }
+    if (error) {
+      return (
+        <div className="text-center text-red mt-10 bg-red/10 p-4 rounded-2xl">
+          <p className="font-bold">Error de Conexión</p>
+          <p className="text-sm">{error}</p>
+          <p className="text-xs mt-2">Verifica tus Secrets y la regla de CORS en ServiceNow.</p>
+        </div>
+      );
+    }
+    if (routes.length === 0) {
+      return <p className="text-center text-gray-500 mt-16">No se encontraron rutas disponibles.</p>;
+    }
+    return (
+      <div className="mt-6 flex flex-col gap-5">
+        {/* Mapeamos las rutas y creamos una tarjeta para cada una */}
+        {routes.map((route) => (
+          <RouteCard key={route.sys_id} route={route} />
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-offwhite min-h-screen font-sans flex justify-center">
+      <div className="w-full max-w-md bg-offwhite flex flex-col">
+        <header className="p-6 flex justify-between items-center">
+          <img src={logo} alt="Zayu Go Logo" className="w-28" />
+          <div className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-gray-200" />
+        </header>
+        <main className="px-6 py-2 flex-grow">
+          <h1 className="text-3xl font-bold text-green">Elige tu Ruta al Estadio</h1>
+          <p className="text-gray-500">Opciones calculadas en tiempo real.</p>
+          {renderContent()}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// --- Componente de Tarjeta para cada Ruta ---
+function RouteCard({ route }) {
+  // !!!!! ACCIÓN REQUERIDA !!!!!
+  // Los nombres aquí (ej. route.time, route.distance) deben coincidir
+  // con los nombres EXACTOS de las columnas en tu API de ServiceNow.
+  // Es sensible a mayúsculas/minúsculas y espacios (que se vuelven '_').
+  return (
+    <div className="bg-white p-5 rounded-4xl shadow-lg border-2 border-transparent hover:border-lime transition-all duration-200">
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold text-green">{route['transportation_method']}</h2>
+          <p className="text-sm text-gray-500">Desde: {route.start}</p>
+        </div>
+        <div className="bg-lime text-green font-bold text-lg py-2 px-4 rounded-full">
+          ${route.price}
+        </div>
+      </div>
+      
+      <div className="mt-4 grid grid-cols-2 gap-4 text-center">
+        <div className="bg-lime/10 p-3 rounded-2xl">
+          <p className="text-sm text-green/80">Tiempo Estimado</p>
+          <p className="font-bold text-lg text-green">{route.time}</p>
+        </div>
+         <div className="bg-lime/10 p-3 rounded-2xl">
+          <p className="text-sm text-green/80">Distancia</p>
+          <p className="font-bold text-lg text-green">{route.distance}</p>
+        </div>
+      </div>
+      
+      {/* Mostramos alertas solo si hay incidentes */}
+      {route.incidents && (
+        <div className="mt-4 bg-red/10 text-red p-3 rounded-2xl text-sm">
+          <span className="font-bold">¡Alerta!</span> {route.incidents}
+        </div>
+      )}
+
+      <button className="bg-green text-white w-full py-3 mt-5 rounded-2xl font-bold text-lg transform hover:scale-105 transition-transform">
+        Iniciar Navegación
+      </button>
+    </div>
+  );
+}
+
+export default App;
