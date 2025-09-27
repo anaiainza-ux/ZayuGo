@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, QrCode, MapPin, Calendar, Clock } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
 
 interface TicketData {
   id: string;
@@ -21,34 +23,39 @@ interface TicketData {
 export default function Tickets() {
   const [, setLocation] = useLocation();
   const [selectedTicket, setSelectedTicket] = useState<TicketData | null>(null);
-
-  // todo: remove mock functionality
-  const mockTickets: TicketData[] = [
-    {
-      id: '1',
-      matchTitle: 'México vs. Alemania',
-      date: 'Hoy',
-      time: '19:00 hrs',
-      stadium: 'Estadio BBVA',
-      seatSection: 'A',
-      seatRow: '15',
-      seatNumber: '23',
-      qrCode: 'QR123456789',
-      isUsed: false
-    },
-    {
-      id: '2',
-      matchTitle: 'Brasil vs. Argentina',
-      date: 'Mañana',
-      time: '21:00 hrs',
-      stadium: 'Estadio Azteca',
-      seatSection: 'B',
-      seatRow: '08',
-      seatNumber: '12',
-      qrCode: 'QR987654321',
-      isUsed: false
-    }
-  ];
+  
+  // Fetch user tickets from API (using mock user ID for now)
+  const mockUserId = 'user-1';
+  const { data: ticketsResponse, isLoading } = useQuery({
+    queryKey: ['/api/users', mockUserId, 'tickets'],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+  
+  // Fetch matches to get match details
+  const { data: matchesResponse } = useQuery({
+    queryKey: ['/api/matches'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  
+  const tickets = (ticketsResponse as any)?.data || [];
+  const matches = (matchesResponse as any)?.data || [];
+  
+  // Transform tickets to include match information
+  const enrichedTickets: TicketData[] = tickets.map((ticket: any) => {
+    const match = matches.find((m: any) => m.id === ticket.matchId);
+    return {
+      id: ticket.id,
+      matchTitle: match ? `${match.homeTeam} vs. ${match.awayTeam}` : 'Partido no encontrado',
+      date: match ? format(new Date(match.matchDate), 'dd/MM/yyyy') : '',
+      time: match ? format(new Date(match.matchDate), 'HH:mm') + ' hrs' : '',
+      stadium: match?.stadium || '',
+      seatSection: ticket.seatSection,
+      seatRow: ticket.seatRow,
+      seatNumber: ticket.seatNumber,
+      qrCode: ticket.qrCode,
+      isUsed: ticket.isUsed
+    };
+  });
 
   const showQRCode = (ticket: TicketData) => {
     setSelectedTicket(ticket);
@@ -104,7 +111,19 @@ export default function Tickets() {
         {/* Tickets List */}
         <main className="px-6 pb-6">
           <div className="space-y-4">
-            {mockTickets.map((ticket) => (
+            {isLoading ? (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-center text-gray-600">Cargando boletos...</p>
+                </CardContent>
+              </Card>
+            ) : enrichedTickets.length === 0 ? (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-center text-gray-600">No tienes boletos disponibles</p>
+                </CardContent>
+              </Card>
+            ) : enrichedTickets.map((ticket) => (
               <Card key={ticket.id} className="overflow-hidden hover-elevate">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">

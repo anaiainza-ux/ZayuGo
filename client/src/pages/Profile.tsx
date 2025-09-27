@@ -32,11 +32,11 @@ export default function Profile() {
   const [editData, setEditData] = useState<UserProfile>(profileData);
 
   const languages = [
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'pt', name: 'Português', flag: '🇧🇷' }
+    { code: 'es', name: 'Español', flag: 'ES' },
+    { code: 'en', name: 'English', flag: 'US' },
+    { code: 'fr', name: 'Français', flag: 'FR' },
+    { code: 'de', name: 'Deutsch', flag: 'DE' },
+    { code: 'pt', name: 'Português', flag: 'BR' }
   ];
 
   const handleEdit = () => {
@@ -58,7 +58,7 @@ export default function Profile() {
 
   const getLanguageName = (code: string) => {
     const lang = languages.find(l => l.code === code);
-    return lang ? `${lang.flag} ${lang.name}` : code;
+    return lang ? `[${lang.flag}] ${lang.name}` : code;
   };
 
   const getInitials = (firstName: string, lastName: string) => {
@@ -216,7 +216,7 @@ export default function Profile() {
                     <SelectContent>
                       {languages.map((lang) => (
                         <SelectItem key={lang.code} value={lang.code}>
-                          {lang.flag} {lang.name}
+                          [{lang.flag}] {lang.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

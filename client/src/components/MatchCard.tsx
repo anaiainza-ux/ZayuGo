@@ -21,7 +21,7 @@ export default function MatchCard({
   };
 
   return (
-    <div className="bg-green text-white p-6 rounded-4xl mt-8 shadow-2xl flex flex-col items-center transform hover:scale-105 transition-transform duration-300 ease-in-out" data-testid="card-match">
+    <div className="bg-green text-white p-6 rounded-4xl mt-8 shadow-2xl flex flex-col items-center hover-elevate" data-testid="card-match">
       <p className="font-semibold text-gold tracking-wider" data-testid="text-match-label">
         PRÓXIMO PARTIDO
       </p>
@@ -33,7 +33,7 @@ export default function MatchCard({
       </p>
       <button 
         onClick={handleTicketClick}
-        className="bg-lime text-green font-bold py-3 px-10 rounded-full mt-6 shadow-lg transform hover:scale-110 transition-transform active-elevate-2"
+        className="bg-lime text-green font-bold py-3 px-10 rounded-full mt-6 shadow-lg hover-elevate active-elevate-2"
         data-testid="button-qr-ticket"
       >
         MI BOLETO QR
