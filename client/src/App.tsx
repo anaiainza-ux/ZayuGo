@@ -8,6 +8,7 @@ import Tickets from "@/pages/Tickets";
 import RoutePage from "@/pages/Route";
 import Translator from "@/pages/Translator";
 import Help from "@/pages/Help";
+import Profile from "@/pages/Profile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/route" component={RoutePage} />
       <Route path="/translator" component={Translator} />
       <Route path="/help" component={Help} />
+      <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );

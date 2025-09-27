@@ -1,13 +1,21 @@
 import logoUrl from '@assets/Zayu Go logo_1759003276594.jpg';
 
+import { useLocation } from 'wouter';
+
 interface HeaderProps {
   onProfileClick?: () => void;
 }
 
 export default function Header({ onProfileClick }: HeaderProps) {
+  const [, setLocation] = useLocation();
+  
   const handleProfileClick = () => {
     console.log('Profile clicked');
-    onProfileClick?.();
+    if (onProfileClick) {
+      onProfileClick();
+    } else {
+      setLocation('/profile');
+    }
   };
 
   return (
