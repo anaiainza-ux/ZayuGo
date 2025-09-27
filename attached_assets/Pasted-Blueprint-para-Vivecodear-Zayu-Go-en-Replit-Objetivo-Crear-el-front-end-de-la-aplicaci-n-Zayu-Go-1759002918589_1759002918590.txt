@@ -1,0 +1,173 @@
+Blueprint para "Vivecodear" Zayu Go en Replit
+Objetivo: Crear el front-end de la aplicación Zayu Go en Replit, implementando una identidad visual específica, limpia y moderna. La app será funcional, visualmente atractiva y estará lista para ser conectada a la API de ServiceNow.
+Paso 1: Creación del Entorno en Replit (60 segundos)
+Ve a replit.com y crea una cuenta.
+Haz clic en el botón "+ Create Repl" en la esquina superior izquierda.
+En la ventana que aparece, busca la plantilla oficial "React (Vite)" y selecciónala.
+Dale un nombre a tu Repl, como zayu-go-app.
+Haz clic en "+ Create Repl".
+¡Listo! Replit creará un entorno de desarrollo completo en tu navegador. A la izquierda verás tus archivos, en el centro tu código y a la derecha la vista previa de tu app (WebView).
+Paso 2: Configuración de la Identidad Visual con Tailwind CSS (3 minutos)
+Ahora vamos a instalar y configurar Tailwind CSS para usar tu paleta de colores y la estética del logo.
+Abre la pestaña "Shell" en Replit (está junto a la "Console").
+Copia y pega los siguientes comandos, uno por uno, y presiona Enter después de cada uno:
+code
+Bash
+npm install -D tailwindcss postcss autoprefixer
+code
+Bash
+npx tailwindcss init -p
+Configura tu paleta de colores: Se habrá creado un archivo tailwind.config.js. Haz clic en él y reemplaza todo su contenido con este código. Este es el corazón de tu identidad visual:
+code
+JavaScript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      // --- NUESTRA PALETA DE COLORES OFICIAL ---
+      colors: {
+        'gold': '#EFAA04',      // Dorado Zayu
+        'offwhite': '#f1f2eb',  // Blanco hueso, para fondos
+        'red': '#de1a1a',       // Rojo para alertas o acentos
+        'lime': '#5fc501',      // Verde lima brillante para CTAs
+        'green': '#016d3b',     // Verde oscuro principal del logo
+      },
+      // --- BORDES SUPER REDONDEADOS COMO EL LOGO ---
+      borderRadius: {
+        '4xl': '2rem', // Un radio de borde extra grande
+      },
+      // --- FUENTE QUE COINCIDE CON EL LOGO ---
+      fontFamily: {
+        'sans': ['Poppins', 'sans-serif'],
+      }
+    },
+  },
+  plugins: [],
+}
+Inyecta los estilos de Tailwind: Abre el archivo src/index.css y reemplaza todo su contenido con estas 3 líneas:
+code
+CSS
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+Importa la fuente Poppins: Abre el archivo index.html (en la raíz) y pega esta línea justo antes de la etiqueta </head>:
+code
+Html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+Paso 3: Añadir el Logo (30 segundos)
+En el panel de archivos de la izquierda, haz clic en los tres puntos junto a src y selecciona "New folder". Nombra la carpeta assets.
+Arrastra y suelta tu archivo logo.png desde tu computadora directamente dentro de esta nueva carpeta assets.
+Paso 4: "Vivecodeando" la Interfaz (5 minutos)
+Ahora, borra el contenido de ejemplo y pega el código de nuestra aplicación.
+Abre el archivo src/App.jsx.
+Borra todo lo que hay dentro.
+Copia y pega el siguiente código completo. Este código crea toda la pantalla principal de Zayu Go.
+code
+Jsx
+// src/App.jsx
+
+// Importamos la imagen del logo que subimos
+import logo from './assets/logo.png';
+
+function App() {
+  return (
+    // Contenedor principal con nuestro color de fondo 'offwhite'
+    <div className="bg-offwhite min-h-screen font-sans flex justify-center">
+      
+      {/* Simulamos la pantalla de un teléfono */}
+      <div className="w-full max-w-md bg-offwhite flex flex-col">
+
+        {/* --- HEADER CON EL LOGO --- */}
+        <header className="p-6 flex justify-between items-center">
+          <img src={logo} alt="Zayu Go Logo" className="w-28" />
+          <div className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-gray-200">
+            {/* Espacio para la foto de perfil */}
+          </div>
+        </header>
+
+        {/* --- CONTENIDO PRINCIPAL --- */}
+        <main className="px-6 py-2 flex-grow">
+          <h1 className="text-4xl font-bold text-green">¡Hola, Campeón!</h1>
+          <p className="text-gray-500 mt-1">Tu experiencia para el mundial empieza aquí.</p>
+
+          {/* --- TARJETA PRINCIPAL DEL PARTIDO --- */}
+          <div className="bg-green text-white p-6 rounded-4xl mt-8 shadow-2xl flex flex-col items-center transform hover:scale-105 transition-transform duration-300 ease-in-out">
+            <p className="font-semibold text-gold tracking-wider">PRÓXIMO PARTIDO</p>
+            <h2 className="text-3xl font-bold mt-2">México vs. Alemania</h2>
+            <p className="opacity-80 mt-1">Hoy, 19:00 hrs - Estadio BBVA</p>
+            <button className="bg-lime text-green font-bold py-3 px-10 rounded-full mt-6 shadow-lg transform hover:scale-110 transition-transform">
+              MI BOLETO QR
+            </button>
+          </div>
+
+          {/* --- MENÚ DE ACCIONES RÁPIDAS --- */}
+          <div className="mt-10 grid grid-cols-2 gap-4">
+            <ActionButton icon="🗺️" title="Ruta al Estadio" />
+            <ActionButton icon="🎟️" title="Mis Boletos" />
+            <ActionButton icon="💬" title="Traductor" />
+            <ActionButton icon="❓" title="Ayuda" />
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// --- COMPONENTE REUTILIZABLE PARA LOS BOTONES DEL MENÚ ---
+// Lo ponemos en el mismo archivo para máxima velocidad
+function ActionButton({ icon, title }) {
+  return (
+    <button className="bg-white p-4 rounded-4xl shadow-md flex flex-col items-center justify-center text-center aspect-square transform hover:-translate-y-2 transition-transform duration-200 ease-in-out">
+      <span className="text-4xl">{icon}</span>
+      <h3 className="font-bold text-green mt-2">{title}</h3>
+    </button>
+  );
+}
+
+export default App;
+Paso 5: ¡Disfruta la Magia!
+Mira la ventana de "WebView" a la derecha. Replit automáticamente compilará tu código y mostrará tu aplicación Zayu Go, luciendo exactamente como la diseñaste.
+¡Felicidades! Acabas de "vivecodear" un front-end moderno y estéticamente pulido en minutos. La URL en la parte superior de la WebView es pública y puedes compartirla con quien quieras.
+Siguientes Pasos: Conectando a ServiceNow
+Para conectar esto, añadirías una función dentro de un ActionButton (o donde sea necesario) que llame a tu API de ServiceNow.
+Ejemplo de cómo empezar a conectarlo:
+code
+JavaScript
+// Dentro del componente ActionButton, por ejemplo:
+
+async function handleGetTickets() {
+  console.log("Pidiendo boletos a ServiceNow...");
+  
+  // La URL de tu Scripted REST API en ServiceNow
+  const serviceNowURL = 'https://TU-INSTANCIA.service-now.com/api/zayu_go/get_tickets';
+
+  try {
+    const response = await fetch(serviceNowURL, {
+      method: 'GET', // o 'POST' si necesitas enviar datos
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Basic ' + btoa('usuario:contraseña'), // O el método de auth que uses
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Error al conectar con ServiceNow');
+    }
+    
+    const data = await response.json();
+    console.log("¡Boletos recibidos!", data.result);
+    // Aquí, actualizarías el estado de tu app con los datos recibidos
+    
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Y luego llamarías a esta función desde el botón:
+// <button onClick={handleGetTickets} ... >
