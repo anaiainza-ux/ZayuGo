@@ -13,10 +13,10 @@ export default function Home() {
   };
 
   const quickActions = [
-    { icon: "🗺️", title: "Ruta al Estadio" },
-    { icon: "🎟️", title: "Mis Boletos" },
-    { icon: "💬", title: "Traductor" },
-    { icon: "❓", title: "Ayuda" }
+    { icon: "🗺️", title: "Ruta al Estadio", path: "/route" },
+    { icon: "🎟️", title: "Mis Boletos", path: "/tickets" },
+    { icon: "💬", title: "Traductor", path: "/translator" },
+    { icon: "❓", title: "Ayuda", path: "/help" }
   ];
 
   return (
@@ -50,7 +50,10 @@ export default function Home() {
                 key={index}
                 icon={action.icon}
                 title={action.title}
-                onClick={() => console.log(`${action.title} feature would open`)}
+                onClick={() => {
+                  console.log(`Navigating to ${action.title}`);
+                  window.location.href = action.path;
+                }}
               />
             ))}
           </div>
