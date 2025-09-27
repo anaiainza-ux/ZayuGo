@@ -105,6 +105,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ServiceNow routes endpoint
+  app.get("/api/routes", async (req, res) => {
+    try {
+      const instanceURL = process.env.SN_INSTANCE_URL;
+      const user = process.env.SN_USER;
+      const password = process.env.SN_PASSWORD;
+
+      console.log("Raw environment variables:", {
+        instanceURL: JSON.stringify(instanceURL),
+        user: JSON.stringify(user),
+        hasPassword: !!password
+      });
+
+      if (!instanceURL || !user || !password) {
+        console.error("Missing ServiceNow credentials:", {
+          instanceURL: !!instanceURL,
+          user: !!user, 
+          password: !!password
+        });
+        return res.status(500).json({ 
+          success: false, 
+          error: "ServiceNow credentials not configured" 
+        });
+      }
+
+      // Clean the instance URL to remove any protocol prefix and trim whitespace
+      const cleanInstanceURL = instanceURL.trim().replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const endpoint = `https://${cleanInstanceURL}/api/now/table/x_snc_zayugo_4000x_data?sysparm_limit=10`;
+      
+      console.log("Cleaned instanceURL:", JSON.stringify(cleanInstanceURL));
+      console.log("Final endpoint:", JSON.stringify(endpoint));
+
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Basic ' + Buffer.from(`${user}:${password}`).toString('base64'),
+        }
+      });
+
+      console.log("ServiceNow API response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("ServiceNow API error response:", errorText);
+        throw new Error(`ServiceNow API error: ${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("ServiceNow API success, records found:", data.result?.length || 0);
+      res.json({ success: true, data: data.result || [] });
+    } catch (error) {
+      console.error("ServiceNow API error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        cause: error instanceof Error && 'cause' in error ? error.cause : 'no cause',
+        stack: error instanceof Error ? error.stack : 'no stack'
+      });
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to fetch routes from ServiceNow",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // ServiceNow integration endpoint (for future use)
   app.post("/api/servicenow/sync", async (req, res) => {
     try {

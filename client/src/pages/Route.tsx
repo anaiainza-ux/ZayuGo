@@ -2,8 +2,20 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, Navigation, Clock, Car, Train, Bus } from 'lucide-react';
+import { ArrowLeft, MapPin, Navigation, Clock, Car, Train, Bus, AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+
+interface ServiceNowRoute {
+  sys_id: string;
+  transportation_method: string;
+  start: string;
+  price: string;
+  time: string;
+  distance: string;
+  incidents?: string;
+}
 
 interface TransportOption {
   id: string;
@@ -12,39 +24,51 @@ interface TransportOption {
   cost: string;
   description: string;
   icon: any;
+  incidents?: string;
 }
 
 export default function Route() {
   const [, setLocation] = useLocation();
-  const [selectedTransport, setSelectedTransport] = useState<string>('car');
+  const [selectedTransport, setSelectedTransport] = useState<string>('');
 
-  // todo: remove mock functionality
-  const transportOptions: TransportOption[] = [
-    {
-      id: 'car',
-      type: 'car',
-      duration: '35 min',
-      cost: 'Gasolina + Estacionamiento',
-      description: 'Conduce hasta el Estadio BBVA',
-      icon: Car
-    },
-    {
-      id: 'metro',
-      type: 'metro',
-      duration: '45 min',
-      cost: '$25 MXN',
-      description: 'Metro + Camión directo',
-      icon: Train
-    },
-    {
-      id: 'bus',
-      type: 'bus',
-      duration: '50 min',
-      cost: '$30 MXN',
-      description: 'Autobús directo al estadio',
-      icon: Bus
-    }
-  ];
+  // Fetch route data from ServiceNow
+  const { data: routesResponse, isLoading, error } = useQuery({
+    queryKey: ['/api/routes'],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  const routes: ServiceNowRoute[] = (routesResponse as any)?.data || [];
+
+  // Transform ServiceNow data to transport options
+  const getTransportIcon = (method: string) => {
+    const lowerMethod = method.toLowerCase();
+    if (lowerMethod.includes('auto') || lowerMethod.includes('car')) return Car;
+    if (lowerMethod.includes('metro') || lowerMethod.includes('tren')) return Train;
+    if (lowerMethod.includes('bus') || lowerMethod.includes('autobús')) return Bus;
+    return Car; // default
+  };
+
+  const getTransportType = (method: string): 'car' | 'metro' | 'bus' => {
+    const lowerMethod = method.toLowerCase();
+    if (lowerMethod.includes('metro') || lowerMethod.includes('tren')) return 'metro';
+    if (lowerMethod.includes('bus') || lowerMethod.includes('autobús')) return 'bus';
+    return 'car'; // default
+  };
+
+  const transportOptions: TransportOption[] = routes.map(route => ({
+    id: route.sys_id,
+    type: getTransportType(route.transportation_method),
+    duration: route.time,
+    cost: route.price,
+    description: route.transportation_method,
+    icon: getTransportIcon(route.transportation_method),
+    incidents: route.incidents
+  }));
+
+  // Auto-select first option if none selected
+  if (!selectedTransport && transportOptions.length > 0) {
+    setSelectedTransport(transportOptions[0].id);
+  }
 
   const startNavigation = (transportType: string) => {
     console.log(`Starting navigation with ${transportType}`);
@@ -95,41 +119,91 @@ export default function Route() {
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-green">Opciones de Transporte</h2>
             
-            {transportOptions.map((option) => {
-              const IconComponent = option.icon;
-              const isSelected = selectedTransport === option.id;
-              
-              return (
-                <Card 
-                  key={option.id} 
-                  className={`cursor-pointer transition-all hover-elevate ${
-                    isSelected ? 'ring-2 ring-green' : ''
-                  }`}
-                  onClick={() => setSelectedTransport(option.id)}
-                  data-testid={`card-transport-${option.id}`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green/10 rounded-lg">
-                          <IconComponent className="w-6 h-6 text-green" />
+            {isLoading ? (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-center text-gray-600">Calculando rutas desde ServiceNow...</p>
+                </CardContent>
+              </Card>
+            ) : error ? (
+              <Card className="border-red/20">
+                <CardContent className="p-4">
+                  <div className="text-center text-red">
+                    <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+                    <p className="font-bold">Error de Conexión</p>
+                    <p className="text-sm">No se pudieron obtener las rutas desde ServiceNow</p>
+                    <p className="text-xs mt-2">Verifica la configuración de credenciales</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : transportOptions.length === 0 ? (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-center text-gray-600">No hay rutas disponibles</p>
+                </CardContent>
+              </Card>
+            ) : (
+              transportOptions.map((option) => {
+                const IconComponent = option.icon;
+                const isSelected = selectedTransport === option.id;
+                const route = routes.find(r => r.sys_id === option.id);
+                
+                return (
+                  <Card 
+                    key={option.id} 
+                    className={`cursor-pointer transition-all hover-elevate ${
+                      isSelected ? 'ring-2 ring-green' : ''
+                    }`}
+                    onClick={() => setSelectedTransport(option.id)}
+                    data-testid={`card-transport-${option.id}`}
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-green/10 rounded-lg">
+                            <IconComponent className="w-6 h-6 text-green" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-green text-lg">{option.description}</h3>
+                            <p className="text-sm text-gray-600">Desde: {route?.start || 'Tu ubicación'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-green">{option.description}</h3>
-                          <p className="text-sm text-gray-600">Duración: {option.duration}</p>
-                          <p className="text-sm text-gray-600">Costo: {option.cost}</p>
+                        <div className="bg-lime text-green font-bold text-lg py-2 px-4 rounded-full">
+                          {option.cost}
                         </div>
                       </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="bg-lime/10 p-3 rounded-2xl text-center">
+                          <p className="text-sm text-green/80">Tiempo Estimado</p>
+                          <p className="font-bold text-lg text-green">{option.duration}</p>
+                        </div>
+                        <div className="bg-lime/10 p-3 rounded-2xl text-center">
+                          <p className="text-sm text-green/80">Distancia</p>
+                          <p className="font-bold text-lg text-green">{route?.distance || 'N/A'}</p>
+                        </div>
+                      </div>
+                      
+                      {option.incidents && (
+                        <div className="bg-red/10 text-red p-3 rounded-2xl text-sm mb-4">
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" />
+                            <span className="font-bold">¡Alerta!</span>
+                          </div>
+                          <p className="mt-1">{option.incidents}</p>
+                        </div>
+                      )}
+                      
                       {isSelected && (
                         <Badge className="bg-lime text-green">
                           Seleccionado
                         </Badge>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
           </div>
 
           {/* Navigation Button */}
