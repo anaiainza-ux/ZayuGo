@@ -2,7 +2,16 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
+  
+  // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+  // Hemos eliminado el prefijo 'client/' de las rutas,
+  // porque Netlify ya está ejecutando todo desde dentro de la carpeta 'client'.
+  content: [
+    "./index.html",
+    "./src/**/*.{js,jsx,ts,tsx}"
+  ],
+  // ------------------------------------
+
   theme: {
     extend: {
       borderRadius: {
