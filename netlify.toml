@@ -1,15 +1,13 @@
-# --- Configuración de Build CORREGIDA para Netlify ---
+# --- Configuración de Build DEFINITIVA para Netlify ---
 [build]
-  # Base: El directorio donde vive tu proyecto de front-end.
   base = "client"
   
-  # Command: ¡LA LÍNEA CLAVE! Primero instala dependencias, LUEGO construye.
-  command = "npm install && npm run build"
+  # Command: Le decimos a Netlify que ejecute SOLAMENTE el build del front-end.
+  command = "npm install && vite build"
   
-  # Publish: El directorio que se debe publicar (relativo a 'base').
   publish = "dist"
 
-# --- Reglas de Redirección (siguen igual y son correctas) ---
+# --- Reglas de Redirección ---
 [[redirects]]
   from = "/*"
   to = "/index.html"
