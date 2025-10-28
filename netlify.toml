@@ -1,0 +1,23 @@
+# --- Configuración de Build para Netlify ---
+# Esto le dice a Netlify cómo construir tu proyecto.
+[build]
+  # Base: El directorio donde vive tu proyecto de front-end.
+  base = "client"
+  
+  # Command: El comando para construir tu sitio.
+  command = "npm run build"
+  
+  # Publish: El directorio que se debe publicar después del build.
+  publish = "client/dist"
+
+# --- Reglas de Redirección ---
+# Esto reemplaza la necesidad del archivo _redirects.
+[[redirects]]
+  # From: Aplica esta regla a cualquier ruta que se pida.
+  from = "/*"
+  
+  # To: Sirve el archivo index.html principal de tu app.
+  to = "/index.html"
+  
+  # Status: Devuelve un código 200 (OK).
+  status = 200
